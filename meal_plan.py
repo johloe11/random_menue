@@ -51,21 +51,29 @@ class DinnerPlan():
                 'Thursday', 'Friday', 'Saturday']
         weekday = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
         days = []
+        attempt = 0
         for day in week:
             length = len(days)
             while len(days) == length:
+                attempt += 1
                 today = self.meals[str(random.choice(self.dinners))]
                 meal_plan = [sublist.iloc[:,0].to_string().lstrip('0 ') for sublist in days]
                 hard_count = [sublist.iloc[:,3].to_string().lstrip('0 ') for sublist in days].count('hard')
-                moderately_hard_count = [sublist.iloc[:,3].to_string().lstrip('0 ') for sublist in days].count('moderately hard') + hard_count            
+                moderately_hard_count = [sublist.iloc[:,3].to_string().lstrip('0 ') for sublist in days].count('moderately hard')
                 if today['difficulty'] == 'hard':
                     hard_count = hard_count + 1
+                if today['difficulty'] == 'moderately hard':
+                    moderately_hard_count = moderately_hard_count + 1
+                moderately_hard_count = moderately_hard_count + hard_count
+                print(moderately_hard_count)
                 if day == 'Friday':
-                    while today['meat']:
+                    while today['meat'] or today['difficulty'] == 'hard':
                         today = self.meals[str(random.choice(self.dinners))]
+                        attempt + 1
                 if day in weekday:
                     while today['difficulty'] == 'hard':
                         today = self.meals[str(random.choice(self.dinners))] 
+                        attempt + 1
                 if today['dinner'] not in meal_plan and hard_count < 2 and moderately_hard_count < 4:
                     today['Day'] = day
                     df = pd.DataFrame(today, index=[0])
@@ -74,17 +82,22 @@ class DinnerPlan():
         day = data['Day']
         data = data.drop(['Day'], axis=1)
         data.insert(0, 'Day', day)
+        print(attempt)
         return data
     
     def dissatisfied(self, df, days):
         data = df.copy()
         data['order'] = data.index+1
+        meal_list = [meal for meal in data['dinner']]
         for day in days:
             data = data[data['Day'] != day]
             meal = self.what_to_eat()
+            while str(meal['dinner']).lstrip('0 ').rstrip(' Name: dinner, dtype: object').strip() in meal_list:
+                meal = self.what_to_eat()
             meal['Day'] = day
             meal['order'] = (data['order'].max()*((data['order'].max()+1)/2))-sum(data['order'])
             data = data.append(meal).reset_index(drop = True)
+            meal_list = [meal for meal in data['dinner']]
         data = data.sort_values(by=['order'])
         data = data.drop(['order'], axis=1)
         return data
@@ -98,13 +111,13 @@ dinner_list.add_meal('cullen skink', 'https://www.thespruceeats.com/traditional-
 dinner_list.add_meal('fish and chips', 'https://www.thespruceeats.com/best-fish-and-chips-recipe-434856',
             'Sea-food', 'moderately easy', False)
 dinner_list.add_meal('tacos', 'https://www.thewholesomedish.com/the-best-homemade-tacos/',
-            'Mexican', 'easy', True)
+            'Mexican', 'moderately hard', True)
 dinner_list.add_meal('shrimp alfredo', 'https://www.dinneratthezoo.com/shrimp-alfredo/',
             'Sea-food', 'moderately easy', False)
 dinner_list.add_meal('smoked fish mac and cheese', 'https://chezlerevefrancais.com/smoked-salmon-mac-cheese/',
             'Italian', 'moderately easy', False)
 dinner_list.add_meal('hamburgers', 'https://heygrillhey.com/smoked-hamburgers/',
-            'American', 'easy', True)
+            'American', 'moderately hard', True)
 dinner_list.add_meal('fish schnitzel', 'https://www.foodtolove.co.nz/recipes/lemon-and-chilli-fish-schnitzel-7978',
             'Sea-food', 'moderately easy', False)
 dinner_list.add_meal('calzone', 'https://www.spendwithpennies.com/homemade-calzone/',
@@ -112,7 +125,7 @@ dinner_list.add_meal('calzone', 'https://www.spendwithpennies.com/homemade-calzo
 
 week = dinner_list.week_menue()
 
-weeknew = dinner_list.dissatisfied(week, ['Monday', 'Tuesday'])
+weeknew = dinner_list.dissatisfied(week, ['Monday', 'Tuesday', 'Wednesday'])
 
 q = dinner_list.what_to_eat()
 
