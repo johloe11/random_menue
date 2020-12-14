@@ -45,7 +45,7 @@ class DinnerPlan():
             print('Either, no dinners were entered or there are no meals in the '
                   'category you specified. Please enter more meals or change '
                   'your cuisine type specification and try again.')
-
+    
     def week_menue(self):
         week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 
                 'Thursday', 'Friday', 'Saturday']
@@ -60,38 +60,13 @@ class DinnerPlan():
                 moderately_hard_count = [sublist.iloc[:,3].to_string().lstrip('0 ') for sublist in days].count('moderately hard') + hard_count            
                 if today['difficulty'] == 'hard':
                     hard_count = hard_count + 1
-                if today['dinner'] not in meal_plan and hard_count < 2:
-                    if day == 'Friday':
-                        while today['meat']:
-                            today = self.meals[str(random.choice(self.dinners))]
-                    if day in weekday:
-                        while today['difficulty'] == 'hard':
-                            today = self.meals[str(random.choice(self.dinners))]                            
-                    today['Day'] = day
-                    df = pd.DataFrame(today, index=[0])
-                    days.append(df)
-        data = pd.concat(days).reset_index(drop = True)
-        day = data['Day']
-        data = data.drop(['Day'], axis=1)
-        data.insert(0, 'Day', day)
-        return data
-    
-    def week_menue(self):
-        week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 
-                'Thursday', 'Friday', 'Saturday']
-        days = []
-        for day in week:
-            length = len(days)
-            while len(days) == length:
-                today = self.meals[str(random.choice(self.dinners))]
-                meal_plan = [sublist.iloc[:,0].to_string().lstrip('0 ') for sublist in days]
-                difficulty_plan = [sublist.iloc[:,3].to_string().lstrip('0 ') for sublist in days].count('hard')
-                
-                print(difficulty_plan)
-                if today['dinner'] not in meal_plan:
-                    if day == 'Friday':
-                        while today['meat']:
-                            today = self.meals[str(random.choice(self.dinners))]
+                if day == 'Friday':
+                    while today['meat']:
+                        today = self.meals[str(random.choice(self.dinners))]
+                if day in weekday:
+                    while today['difficulty'] == 'hard':
+                        today = self.meals[str(random.choice(self.dinners))] 
+                if today['dinner'] not in meal_plan and hard_count < 2 and moderately_hard_count < 4:
                     today['Day'] = day
                     df = pd.DataFrame(today, index=[0])
                     days.append(df)
@@ -114,11 +89,6 @@ class DinnerPlan():
         data = data.drop(['order'], axis=1)
         return data
             
-def trying (column):
-week = week[week['Day'] != 'Monday']
-week['order'] = week.index+1      
-b = sum(week['order'])
-a = (week['order'].max()*((week['order'].max()+1)/2))-sum(week['order'])
 
 dinner_list = DinnerPlan()
 dinner_list.add_meal('smoked turkey', 'https://heygrillhey.com/smoked-turkey/',
