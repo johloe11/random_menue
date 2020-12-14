@@ -25,20 +25,21 @@ class DinnerPlan():
                 print('Difficulty should be listed as easy, moderately easy, '
                       'moderately hard, or hard')
   
-    def what_to_eat(self, cuisine_type = 'everything'):
+    def what_to_eat(self, cuisine_type=False, difficulty=False, meat=False):
         try:
-            if cuisine_type == 'everything':
-               choice = random.choice(self.dinners)
-               meal = self.meals[choice]
-               print(f"Your meal today is {choice} ({meal['recipe']}), which "
-                     f"is {meal['cuisine_type']} which is {meal['difficulty']} to make")
-            else:  
-                dic = {dinner: self.meals[dinner]['cuisine_type'] for dinner in self.meals if self.meals[dinner]['cuisine_type']==cuisine_type}
-                cat = [key for key in dic.keys()]
-                choice = (random.choice(cat)) 
-                meal = self.meals[choice]
-                print(f"Your meal today is {choice} ({meal['recipe']}), which "
-                      f"is {meal['cuisine_type']} and is {meal['difficulty']} to make")
+            dic = {dinner: [self.meals[dinner]['cuisine_type'], self.meals[dinner]['difficulty'], self.meals[dinner]['meat']] for dinner in self.meals}
+            if cuisine_type:  
+                dic = {key: value for key, value in dic.items() if self.meals[key]['cuisine_type'] == cuisine_type}
+            if difficulty:
+                dic = {key: value for key, value in dic.items() if self.meals[key]['difficulty'] == difficulty}
+            print(dic)
+            if meat:
+                dic = {dinner: self.meals[dinner]['meat'] for dinner in self.meals if self.meals[dinner]['meat']==meat}                
+            cat = [key for key in dic.keys()]
+            choice = (random.choice(cat)) 
+            meal = self.meals[choice]
+            print(f"Your meal today is {choice} ({meal['recipe']}), which "
+                     f"is {meal['cuisine_type']} and is {meal['difficulty']} to make")
             df = pd.DataFrame(meal, index=[0])
             return df
         except ValueError:
@@ -102,7 +103,9 @@ class DinnerPlan():
         data = data.drop(['order'], axis=1)
         return data
             
-
+dic = [element.value() for element in p]
+dic = {key: value for key, value in p.items()}
+list(p.values())[0]
 dinner_list = DinnerPlan()
 dinner_list.add_meal('smoked turkey', 'https://heygrillhey.com/smoked-turkey/',
             'American', 'hard', True)
@@ -127,7 +130,7 @@ week = dinner_list.week_menue()
 
 weeknew = dinner_list.dissatisfied(week, ['Monday', 'Tuesday', 'Wednesday'])
 
-q = dinner_list.what_to_eat()
+q = dinner_list.what_to_eat(difficulty='hard', cuisine_type='American')
 
 db = MovieDataBase()
 db.add_movie('movie 1', 2232, 'action', 98)
