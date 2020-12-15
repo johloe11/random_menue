@@ -32,7 +32,6 @@ class DinnerPlan():
                 dic = {key: value for key, value in dic.items() if self.meals[key]['cuisine_type'] == cuisine_type}
             if difficulty:
                 dic = {key: value for key, value in dic.items() if self.meals[key]['difficulty'] == difficulty}
-            print(dic)
             if meat:
                 dic = {dinner: self.meals[dinner]['meat'] for dinner in self.meals if self.meals[dinner]['meat']==meat}                
             cat = [key for key in dic.keys()]
@@ -55,7 +54,7 @@ class DinnerPlan():
         attempt = 0
         for day in week:
             length = len(days)
-            while len(days) == length:
+            while len(days) == length and attempt < 50:
                 attempt += 1
                 today = self.meals[str(random.choice(self.dinners))]
                 meal_plan = [sublist.iloc[:,0].to_string().lstrip('0 ') for sublist in days]
@@ -66,7 +65,6 @@ class DinnerPlan():
                 if today['difficulty'] == 'moderately hard':
                     moderately_hard_count = moderately_hard_count + 1
                 moderately_hard_count = moderately_hard_count + hard_count
-                print(moderately_hard_count)
                 if day == 'Friday':
                     while today['meat'] or today['difficulty'] == 'hard':
                         today = self.meals[str(random.choice(self.dinners))]
@@ -83,7 +81,10 @@ class DinnerPlan():
         day = data['Day']
         data = data.drop(['Day'], axis=1)
         data.insert(0, 'Day', day)
-        print(attempt)
+        if attempt > 48:
+            print('Oops! Something went wrong. Please re-run: week = dinner_list.week_menue()' 
+                  ' If this problem persists, add more meatless, easy, and' 
+                  ' moderately easy dishes.')
         return data
     
     def dissatisfied(self, df, days):
@@ -103,92 +104,85 @@ class DinnerPlan():
         data = data.drop(['order'], axis=1)
         return data
             
-dic = [element.value() for element in p]
-dic = {key: value for key, value in p.items()}
-list(p.values())[0]
+
 dinner_list = DinnerPlan()
 dinner_list.add_meal('smoked turkey', 'https://heygrillhey.com/smoked-turkey/',
-            'American', 'hard', True)
+            'American', 'hard', 'yes')
 dinner_list.add_meal('cullen skink', 'https://www.thespruceeats.com/traditional-scottish-cullen-skink-recipe-435379',
-            'Scottish', 'hard', False)
+            'Scottish', 'hard', 'no')
 dinner_list.add_meal('fish and chips', 'https://www.thespruceeats.com/best-fish-and-chips-recipe-434856',
-            'Sea-food', 'moderately easy', False)
+            'Sea-food', 'moderately easy', 'no')
 dinner_list.add_meal('tacos', 'https://www.thewholesomedish.com/the-best-homemade-tacos/',
-            'Mexican', 'moderately hard', True)
+            'Mexican', 'moderately hard', 'yes')
 dinner_list.add_meal('shrimp alfredo', 'https://www.dinneratthezoo.com/shrimp-alfredo/',
-            'Sea-food', 'moderately easy', False)
+            'Sea-food', 'moderately easy', 'no')
 dinner_list.add_meal('smoked fish mac and cheese', 'https://chezlerevefrancais.com/smoked-salmon-mac-cheese/',
-            'Italian', 'moderately easy', False)
+            'Italian', 'moderately easy', 'no')
 dinner_list.add_meal('hamburgers', 'https://heygrillhey.com/smoked-hamburgers/',
-            'American', 'moderately hard', True)
+            'American', 'moderately hard', 'yes')
 dinner_list.add_meal('fish schnitzel', 'https://www.foodtolove.co.nz/recipes/lemon-and-chilli-fish-schnitzel-7978',
-            'Sea-food', 'moderately easy', False)
+            'Sea-food', 'moderately easy', 'no')
 dinner_list.add_meal('calzone', 'https://www.spendwithpennies.com/homemade-calzone/',
-            'Italian', 'moderately hard', True)
+            'Italian', 'moderately hard', 'yes')
+dinner_list.add_meal('Duck soup', 'https://www.food.com/recipe/duck-soup-60255', 
+                     'Thai', 'moderately easy', 'Yes')
+dinner_list.add_meal('Grilled cheese', 'https://www.allrecipes.com/recipe/23891/grilled-cheese-sandwich/', 
+                     'American', 'easy', 'No')
+dinner_list.add_meal('chile relleno', 'https://www.isabeleats.com/chile-relleno-recipe/', 
+                     'Mexican', 'moderately easy', 'no')
 
 week = dinner_list.week_menue()
 
 weeknew = dinner_list.dissatisfied(week, ['Monday', 'Tuesday', 'Wednesday'])
 
-q = dinner_list.what_to_eat(difficulty='hard', cuisine_type='American')
+q = dinner_list.what_to_eat()
 
-db = MovieDataBase()
-db.add_movie('movie 1', 2232, 'action', 98)
-db.add_movie('movie 2', 2232, 'action', 90)
-db.add_movie('movie 3', 2232, 'comedy', 9)
-db.add_movie('movie 4', 2232, 'drama', 8)
-db.what_to_watch()
-    
+add_dinner = InteractiveDinnerPlan()
+add_dinner.add_meal()    
            
-class InteractiveMovieDataBase(MovieDataBase):
-    def add_movie(self):
+class InteractiveDinnerPlan(DinnerPlan):
+    def add_meal(self):
         while True:
-            title = str(input('title: ')).strip()
-            if len(title) < 1:
-                print('Please enter a title')
+            dinner = str(input('dinner: ')).strip()
+            if len(dinner) < 1:
+                print('Please enter a dinner')
                 continue
             else:
                 break
         while True:
-            try:
-                year = int(input('year: '))
-            except ValueError:
-                print('Please only use numbers')
-                continue
-            if year < 1887:
-                print('No films were made before 1887. Please enter a valid year.')
-                continue
-            elif year > 2020:
-                print("The year you have entered has not occured yet, please enter a year 2020 or earlier.")
-            else:
-                break
-        while True:
-            category = str(input('category: ')).strip()
-            if category.replace(" ","").replace("&","").replace("-","").replace("(","").replace(")","").replace("'","").isalpha()==False:
-                print("Please enter a category that uses only the following symbols: letters, &, -, (), or '.")
+            recipe = str(input('recipe: '))
+            if recipe == 'nothing':
+                print('What are you doing? Put something!')
                 continue
             else:
                 break
         while True:
-            try:
-                rating = int(input('rating: '))
-            except ValueError:
-                print('Please use only numbers')
-                continue
-            if rating < 0 or rating > 100:
-                print('Please only use numbers between 0 and 100')
+            cuisine_type = str(input('cuisine_type: '))
+            if cuisine_type == 'nothing':
+                print('What are you doing? Put something!')
                 continue
             else:
                 break
-        self.titles.append(title)
-        self.movies[title] = {'year':int(year), 'category':category, 'rating':rating}
-        print('{} ({}) added to the database.'.format(title,year))
+        while True:
+            difficulty = str(input('difficulty: ')).strip()
+            if difficulty.strip() not in ['easy', 'moderately easy', 'moderately hard', 'hard']:
+                print('Use only easy, moderately easy, moderately hard, or hard')
+                continue
+            else:
+                break
+        while True:
+            meat = str(input('meat: '))
+            if meat.strip().lower() not in ['yes', 'no']:
+                print('Please answer with yes or no')
+                continue
+            else:
+                break
+        self.dinners.append(dinner)
+        self.meals[dinner] = {'recipe':recipe, 'cuisine_type':cuisine_type, 
+                              'difficulty':difficulty, 'meat':meat.lower()}
+        print(f'To perminately add this to the code copy and past the following'
+              f" into the code: dinner_list.add_meal('{dinner}', "
+              f"'{recipe}', '{cuisine_type}', '{difficulty}', '{meat.lower()}')")
             
 
     
-    def movie_rankings(self):
-        dicti = {title: self.movies[title]['rating'] for title in self.movies}
-        new = {title: rating for title, rating in sorted(dicti.items(), key=lambda rate: -rate[1])}
-        print (new)
-        cate = [key for key in new.keys()]
-        return cate  
