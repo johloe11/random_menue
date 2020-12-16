@@ -13,32 +13,61 @@ class DinnerPlan():
         self.dinners = []
         self.meals = {}
 
-    def add_meal(self, dinner, recipe, cuisine_type, difficulty, meat):
+    def add_meal(self, dinner, recipe, cuisine_type, difficulty, 
+                 prep_time, cook_time, meat, healthy):
         if dinner in self.dinners:
             print('The dinner listed is already in the database')
         else:
-            if difficulty in ['easy', 'moderately easy', 'moderately hard', 'hard']:
+            if difficulty in ['easy', 'moderately easy', 'moderately hard', 'hard']\
+                and meat in ['yes', 'no'] and str(cook_time).isnumeric()==True\
+                and str(prep_time).isnumeric()==True and healthy in ['yes', 'no']:
                 self.dinners.append(dinner)
-                self.meals[dinner] = {'dinner': dinner, 'recipe':recipe, 'cuisine_type': cuisine_type, 'difficulty':difficulty, 'meat':meat}
+                total_time = prep_time+cook_time
+                self.meals[dinner] = {'dinner': dinner, 'recipe':recipe, 
+                                      'cuisine_type': cuisine_type, 
+                                      'difficulty':difficulty,
+                                      'prep time': f'{prep_time} minutes',                                      
+                                      'cook time': f'{cook_time} minutes',
+                                      'total time': f'{total_time} minutes',
+                                      'meat':meat, 'healthy': healthy}
                 print(f'{dinner} added to the database.')
             else:
                 print('Difficulty should be listed as easy, moderately easy, '
-                      'moderately hard, or hard')
+                      'moderately hard, or hard, meat and healthy should be either yes or no, '
+                      'prep_time and cook_time should be a number (not spelled out)')
   
-    def what_to_eat(self, cuisine_type=False, difficulty=False, meat=False):
+    def what_to_eat(self, cuisine_type=False, difficulty=False, prep_time=False, 
+                    cook_time=False, total_time=False, meat=False, healthy=False,
+                    printing=True):
         try:
-            dic = {dinner: [self.meals[dinner]['cuisine_type'], self.meals[dinner]['difficulty'], self.meals[dinner]['meat']] for dinner in self.meals}
+            dic = {dinner: [self.meals[dinner]['cuisine_type'], 
+                            self.meals[dinner]['difficulty'], 
+                            self.meals[dinner]['prep time'], 
+                            self.meals[dinner]['cook time'],
+                            self.meals[dinner]['total time'], 
+                            self.meals[dinner]['meat'],
+                            self.meals[dinner]['healthy']] for dinner in self.meals}
             if cuisine_type:  
                 dic = {key: value for key, value in dic.items() if self.meals[key]['cuisine_type'] == cuisine_type}
             if difficulty:
                 dic = {key: value for key, value in dic.items() if self.meals[key]['difficulty'] == difficulty}
+            if prep_time:
+                dic = {key: value for key, value in dic.items() if int(self.meals[key]['prep time'].rstrip(' minutes')) <= prep_time}
+            if cook_time:
+                dic = {key: value for key, value in dic.items() if int(self.meals[key]['cook time'].rstrip(' minutes')) <= cook_time}
+            if total_time:
+                dic = {key: value for key, value in dic.items() if int(self.meals[key]['total time'].rstrip(' minutes')) <= total_time}            
             if meat:
-                dic = {dinner: self.meals[dinner]['meat'] for dinner in self.meals if self.meals[dinner]['meat']==meat}                
+                dic = {key: value for key, value in dic.items() if self.meals[key]['meat'] == meat}            
+            if healthy:
+                dic = {key: value for key, value in dic.items() if self.meals[key]['healthy'] == healthy}
             cat = [key for key in dic.keys()]
             choice = (random.choice(cat)) 
             meal = self.meals[choice]
-            print(f"Your meal today is {choice} ({meal['recipe']}), which "
-                     f"is {meal['cuisine_type']} and is {meal['difficulty']} to make")
+            if printing:
+                print(f"Your meal today is {choice} ({meal['recipe']}), which "
+                      f"is {meal['cuisine_type']} and is {meal['difficulty']} to make. "
+                      f"The total cook time is {meal['total time']}")
             df = pd.DataFrame(meal, index=[0])
             return df
         except ValueError:
@@ -66,7 +95,7 @@ class DinnerPlan():
                     moderately_hard_count = moderately_hard_count + 1
                 moderately_hard_count = moderately_hard_count + hard_count
                 if day == 'Friday':
-                    while today['meat'] or today['difficulty'] == 'hard':
+                    while today['meat'] == 'yes' or today['difficulty'] == 'hard':
                         today = self.meals[str(random.choice(self.dinners))]
                         attempt + 1
                 if day in weekday:
@@ -82,60 +111,86 @@ class DinnerPlan():
         data = data.drop(['Day'], axis=1)
         data.insert(0, 'Day', day)
         if attempt > 48:
-            print('Oops! Something went wrong. Please re-run: week = dinner_list.week_menue()' 
+            print('Oops! Something went wrong! Please re-run: week = dinner_list.week_menue()' 
                   ' If this problem persists, add more meatless, easy, and' 
                   ' moderately easy dishes.')
         return data
-    
-    def dissatisfied(self, df, days):
+
+    def dissatisfied(self, df, days, cuisine_types=[False,False,False,False,False,False,False], 
+                     difficulties=[False,False,False,False,False,False,False], 
+                     prep_times=[False,False,False,False,False,False,False],
+                     cook_times=[False,False,False,False,False,False,False], 
+                     total_times=[False,False,False,False,False,False,False], 
+                     meats=[False,False,False,False,False,False,False], 
+                     healths=[False,False,False,False,False,False,False]):
         data = df.copy()
+        attempt = 0
         data['order'] = data.index+1
         meal_list = [meal for meal in data['dinner']]
-        for day in days:
+        for day, cuisine_type, difficulty, prep_time, cook_time, total_time, meat, health in zip(
+                days, cuisine_types, difficulties, prep_times, cook_times, 
+                total_times, meats, healths):
             data = data[data['Day'] != day]
-            meal = self.what_to_eat()
-            while str(meal['dinner']).lstrip('0 ').rstrip(' Name: dinner, dtype: object').strip() in meal_list:
-                meal = self.what_to_eat()
+            meal = self.what_to_eat(cuisine_type=cuisine_type, difficulty=difficulty, 
+                                    prep_time=prep_time, cook_time=cook_time, 
+                                    total_time=total_time, meat=meat, 
+                                    healthy=health, printing=False)
+            while str(meal['dinner']).lstrip('0 ').rstrip(' Name: dinner, dtype: object').strip() in meal_list\
+                and attempt<21:
+                meal = self.what_to_eat(cuisine_type=cuisine_type, difficulty=difficulty, 
+                                    prep_time=prep_time, cook_time=cook_time, 
+                                    total_time=total_time, meat=meat, 
+                                    healthy=health, printing=False)
+                if attempt==20:
+                    print("Oops! Something went wrong! There probably aren't "
+                          "any meals not already in week that meet your specifications. "
+                          "You can either rerun week, change the specifications, "
+                          "or add more meals with that specification and rerun "
+                          'the code.')
+                attempt += 1
             meal['Day'] = day
             meal['order'] = (data['order'].max()*((data['order'].max()+1)/2))-sum(data['order'])
             data = data.append(meal).reset_index(drop = True)
             meal_list = [meal for meal in data['dinner']]
-        data = data.sort_values(by=['order'])
+        data = data.sort_values(by=['order']).reset_index(drop = True)
         data = data.drop(['order'], axis=1)
         return data
             
 
 dinner_list = DinnerPlan()
 dinner_list.add_meal('smoked turkey', 'https://heygrillhey.com/smoked-turkey/',
-            'American', 'hard', 'yes')
+            'American', 'hard', 15, 420, 'yes', 'yes')
 dinner_list.add_meal('cullen skink', 'https://www.thespruceeats.com/traditional-scottish-cullen-skink-recipe-435379',
-            'Scottish', 'hard', 'no')
+            'Scottish', 'hard', 40, 240, 'no', 'yes')
 dinner_list.add_meal('fish and chips', 'https://www.thespruceeats.com/best-fish-and-chips-recipe-434856',
-            'Sea-food', 'moderately easy', 'no')
+            'Sea-food', 'moderately easy', 20, 25, 'no', 'no')
 dinner_list.add_meal('tacos', 'https://www.thewholesomedish.com/the-best-homemade-tacos/',
-            'Mexican', 'moderately hard', 'yes')
+            'Mexican', 'moderately hard', 5, 15, 'yes', 'no')
 dinner_list.add_meal('shrimp alfredo', 'https://www.dinneratthezoo.com/shrimp-alfredo/',
-            'Sea-food', 'moderately easy', 'no')
+            'Sea-food', 'moderately easy', 10, 35, 'no', 'yes')
 dinner_list.add_meal('smoked fish mac and cheese', 'https://chezlerevefrancais.com/smoked-salmon-mac-cheese/',
-            'Italian', 'moderately easy', 'no')
+            'Italian', 'moderately easy', 20, 300, 'no', 'no')
 dinner_list.add_meal('hamburgers', 'https://heygrillhey.com/smoked-hamburgers/',
-            'American', 'moderately hard', 'yes')
+            'American', 'moderately hard', 5, 45, 'yes', 'no')
 dinner_list.add_meal('fish schnitzel', 'https://www.foodtolove.co.nz/recipes/lemon-and-chilli-fish-schnitzel-7978',
-            'Sea-food', 'moderately easy', 'no')
+            'Sea-food', 'moderately easy', 10, 25, 'no', 'yes')
 dinner_list.add_meal('calzone', 'https://www.spendwithpennies.com/homemade-calzone/',
-            'Italian', 'moderately hard', 'yes')
+            'Italian', 'moderately hard', 20, 30, 'yes', 'no')
 dinner_list.add_meal('Duck soup', 'https://www.food.com/recipe/duck-soup-60255', 
-                     'Thai', 'moderately easy', 'Yes')
+                     'Thai', 'moderately easy', 10, 45, 'yes', 'yes')
 dinner_list.add_meal('Grilled cheese', 'https://www.allrecipes.com/recipe/23891/grilled-cheese-sandwich/', 
-                     'American', 'easy', 'No')
+                     'American', 'easy', 5, 10, 'no', 'yes')
 dinner_list.add_meal('chile relleno', 'https://www.isabeleats.com/chile-relleno-recipe/', 
-                     'Mexican', 'moderately easy', 'no')
+                     'Mexican', 'moderately easy', 15, 30, 'no', 'yes')
+dinner_list.add_meal('Salmon, spinich, and quina', 'Sam has it',
+                     'French', 'easy', 5, 20, 'no', 'yes')
 
 week = dinner_list.week_menue()
 
-weeknew = dinner_list.dissatisfied(week, ['Monday', 'Tuesday', 'Wednesday'])
+weeknew = dinner_list.dissatisfied(week, ['Monday', 'Tuesday', 'Wednesday'], 
+                                   cuisine_types=['Sea-food', 'Scottish', 'American'])
 
-q = dinner_list.what_to_eat()
+today = dinner_list.what_to_eat(healthy='yes', total_time=60)
 
 add_dinner = InteractiveDinnerPlan()
 add_dinner.add_meal()    
