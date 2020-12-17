@@ -48,7 +48,7 @@ class DinnerPlan():
                             self.meals[dinner]['meat'],
                             self.meals[dinner]['healthy']] for dinner in self.meals}
             if cuisine_type:  
-                dic = {key: value for key, value in dic.items() if self.meals[key]['cuisine_type'] == cuisine_type}
+                dic = {key: value for key, value in dic.items() if self.meals[key]['cuisine_type'].lower() == cuisine_type.lower()}
             if difficulty:
                 dic = {key: value for key, value in dic.items() if self.meals[key]['difficulty'] == difficulty}
             if prep_time:
@@ -155,7 +155,78 @@ class DinnerPlan():
         data = data.sort_values(by=['order']).reset_index(drop = True)
         data = data.drop(['order'], axis=1)
         return data
-            
+      
+class InteractiveDinnerPlan(DinnerPlan):
+    def add_meal(self):
+        while True:
+            dinner = str(input('dinner: ')).strip()
+            if len(dinner) < 1:
+                print('Please enter a dinner')
+                continue
+            else:
+                break
+        while True:
+            recipe = str(input('recipe: '))
+            if recipe == 'nothing':
+                print('What are you doing? Put something!')
+                continue
+            else:
+                break
+        while True:
+            cuisine_type = str(input('cuisine_type: '))
+            if cuisine_type == 'nothing':
+                print('What are you doing? Put something!')
+                continue
+            else:
+                break
+        while True:
+            difficulty = str(input('difficulty: ')).lower()
+            if difficulty.lower() not in ['easy', 'moderately easy', 'moderately hard', 'hard']:
+                print('Use only easy, moderately easy, moderately hard, or hard')
+                continue
+            else:
+                break
+        while True:
+            prep_time = input('prep time: ')
+            if str(prep_time).isnumeric()==False:
+                print('Enter a number that represents the amount of preperation '
+                      'time the meal takes in minutes. (enter only the number)')
+                continue
+            else:
+                break
+        while True:
+            cook_time = input('cook time: ')
+            if str(cook_time).isnumeric()==False:
+                print('Enter a number that represents the amount of cook '
+                      'time the meal takes in minutes. (enter only the number)')
+                continue
+            else:
+                break
+        while True:
+            meat = str(input('meat: '))
+            if meat.strip().lower() not in ['yes', 'no']:
+                print('Please answer with yes or no')
+                continue
+            else:
+                break
+        while True:
+            healthy = str(input('healthy: '))
+            if healthy.strip().lower() not in ['yes', 'no']:
+                print('Please answer with yes or no')
+                continue
+            else:
+                break
+        total_time = cook_time+prep_time
+        self.dinners.append(dinner)
+        self.meals[dinner] = {'recipe':recipe, 'cuisine_type':cuisine_type, 
+                              'difficulty':difficulty, 'prep time':prep_time, 
+                              'cook time':cook_time, 'total time':total_time, 
+                              'meat':meat.lower(), 'healthy':healthy.lower()}
+        print(f'To perminately add this to the code copy and past the following'
+              f" into the code: dinner_list.add_meal('{dinner}', "
+              f"'{recipe}', '{cuisine_type}', '{difficulty}', {int(prep_time)}, "
+              f"{int(cook_time)}, '{meat.lower()}', '{healthy.lower()}')")
+
 
 dinner_list = DinnerPlan()
 dinner_list.add_meal('smoked turkey', 'https://heygrillhey.com/smoked-turkey/',
@@ -184,60 +255,42 @@ dinner_list.add_meal('chile relleno', 'https://www.isabeleats.com/chile-relleno-
                      'Mexican', 'moderately easy', 15, 30, 'no', 'yes')
 dinner_list.add_meal('Salmon, spinich, and quina', 'Sam has it',
                      'French', 'easy', 5, 20, 'no', 'yes')
+dinner_list.add_meal('cereal', 'in the dome piece', 'American', 'easy', 2, 0, 'no', 'yes')
 
+
+'''
+This will give you a random meal for the day.
+You can put the following conditions on it: cuisine_type, difficulty, prep_time,
+cook_time, total_time, meat, or healthy in the style below. 
+For difficulty, choices are easy, moderatly easy, moderately hard, or hard
+For prep_time, cook_time, and total_time, put the maximum number (as an intiger)
+you want in minutes
+For meat and healthy put only yes or no
+'''
+today = dinner_list.what_to_eat(healthy='yes', total_time=60)
+
+
+'''This will give you a week of meals, no more than three moderately hard or hard
+dishes, no meat on Friday, and no repeat meals.'''
 week = dinner_list.week_menue()
 
+'''This will allow you to switch out any number of days or create a meal plan with
+more specifications.
+
+If you want to put conditions on the new meals you can specify cuisine_types,
+difficulties, prep_times, cook_times, total_times, meats, and healths
+in the way below, follwoing the guide set forth in the comment above today = ...'''
 weeknew = dinner_list.dissatisfied(week, ['Monday', 'Tuesday', 'Wednesday'], 
                                    cuisine_types=['Sea-food', 'Scottish', 'American'])
 
-today = dinner_list.what_to_eat(healthy='yes', total_time=60)
 
+'''Run the following if you want to add a meal to the database, it will give you
+the code to copy and past to the block of code above. After adding the recipe re-run
+the code starting with dinner_list = DinnerPlan()'''
 add_dinner = InteractiveDinnerPlan()
 add_dinner.add_meal()    
            
-class InteractiveDinnerPlan(DinnerPlan):
-    def add_meal(self):
-        while True:
-            dinner = str(input('dinner: ')).strip()
-            if len(dinner) < 1:
-                print('Please enter a dinner')
-                continue
-            else:
-                break
-        while True:
-            recipe = str(input('recipe: '))
-            if recipe == 'nothing':
-                print('What are you doing? Put something!')
-                continue
-            else:
-                break
-        while True:
-            cuisine_type = str(input('cuisine_type: '))
-            if cuisine_type == 'nothing':
-                print('What are you doing? Put something!')
-                continue
-            else:
-                break
-        while True:
-            difficulty = str(input('difficulty: ')).strip()
-            if difficulty.strip() not in ['easy', 'moderately easy', 'moderately hard', 'hard']:
-                print('Use only easy, moderately easy, moderately hard, or hard')
-                continue
-            else:
-                break
-        while True:
-            meat = str(input('meat: '))
-            if meat.strip().lower() not in ['yes', 'no']:
-                print('Please answer with yes or no')
-                continue
-            else:
-                break
-        self.dinners.append(dinner)
-        self.meals[dinner] = {'recipe':recipe, 'cuisine_type':cuisine_type, 
-                              'difficulty':difficulty, 'meat':meat.lower()}
-        print(f'To perminately add this to the code copy and past the following'
-              f" into the code: dinner_list.add_meal('{dinner}', "
-              f"'{recipe}', '{cuisine_type}', '{difficulty}', '{meat.lower()}')")
+
             
 
     
